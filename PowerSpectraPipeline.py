@@ -3,6 +3,7 @@ import astropy.units as u
 import math as mh
 import sys
 import matplotlib as mpl
+mpl.use('pdf')
 import matplotlib.pyplot as plt
 #get_ipython().magic(u'matplotlib inline')
 import power_spectra as spe
@@ -14,11 +15,14 @@ import os.path
 
 
 def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, label=None):
+
     if reload_snapshot == False:
         try:
+            print('trying to load 1D ps')
             reload_snapshot=False
             spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot)
         except OSError:
+
             reload_snapshot = True
             spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot)
     else:
@@ -52,30 +56,29 @@ def lnMeanFlux(z):
     return np.log(0.8)*((1. + z)/3.25)**3.2
 
 
-
-if __name__ == '__main___':
+if __name__ == "__main__":
     #python3 PowerSpectrPipeline.py 200 50 0 4 12 14
     gw = int(sys.argv[1]) #200
     sr = int(sys.argv[2]) #50
-    snap_nums = [int(s) for s in sys.argv[3:]]
+    snap_nums = [0, 4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
     boxsize = 20. #Mpc/h
-    grid_width = [gw, gw]
+    grid_width = [gw for sn in snap_nums]
     spectral_res = sr*u.km/u.s
 
 
-    snapshot_dir_pre = '/mnt/ceph/users/landerson/'
+    snapshot_dir_pre = '/mnt/cephtest/landerson/' #'/mnt/ceph/users/landerson/'
     snapshot_dir = ['lyalphaFixedA', 'lyalphaFixedB'] #, 'lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4']
     #snap_nums = [0, 2]
 
     p_corr = boxsize**3.
     k_corr = 2*np.pi/boxsize
 
+    meanflux = []
+    z = []
 
     for sn, g in zip(snap_nums, grid_width):
         spectra1d= []
         k1d = []
-        meanflux = []
-        z = []
         spectra3d = []
         k3d = []
         legend = []
@@ -108,7 +111,7 @@ if __name__ == '__main___':
         #ax[0].set_xlim()
         #ax[0].legend()
         #ax[1].set_xlabel('Array Element * 2pi/boxsize')
-        ax[3].set_xlabel('Array Element * 2pi/boxsize')
+        ax[3].set_xlabel('k [h/Mpc]')
         ax[0].set_ylabel('1DP')
         ax[1].set_ylabel('1DP/<P>')
         ax[2].set_ylabel('3DP')
@@ -122,10 +125,14 @@ if __name__ == '__main___':
     colors = [l.get_c() for l in legend]
 
     figmf, axmf = plt.subplots()
-    axmf.scatter(z, np.log(meanflux), c=colors)
-    zz = np.linspace(0, 100, 100)
+    print(len(meanflux))
+    lyfa = np.arange(0, len(meanflux)/2.)*2
+    lyfb = np.arange(0, len(meanflux)/2.)*2 + 1.
+    axmf.scatter(z[lyfa], np.log(meanflux[lyfa]), edgecolors=colors, facecolors='none')
+    axmf.scatter(z[lyfb], np.log(meanflux[lyfb]), edgecolors=colors, facecolors='none')
+    zz = np.linspace(0, 4, 100)
     axmf.plot(zz, lnMeanFlux(zz), lw=2, color='black')
-    axmf.set_ylim(-50, 1)
+    axmf.set_ylim(-4, 1)
     axmf.set_xlabel('redshift')
     axmf.set_ylabel('ln mean flux')
     figmf.savefig('meanFlux.pdf')
