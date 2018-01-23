@@ -124,8 +124,7 @@ dateLine = "date \n"
 
 for j in range(10):
     k = j + 5
-    sbatchStringStart = """
-#!/bin/bash
+    sbatchStringStart = """#!/bin/bash
 #SBATCH --exclusive
 #SBATCH --nodes=1
 #SBATCH -o lyaV{0}.out -e lyaV{1}.err
