@@ -33,8 +33,8 @@ def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*
     tau_scaling = 1.
     mean_flux = np.mean(np.exp(-1.*tau*tau_scaling))
     #print('The mean flux is: ', mean_flux)
-    spectra_box = spectra.skewers_realisation_hydrogen_overdensity()
-
+    #spectra_box = spectra.skewers_realisation_hydrogen_overdensity()
+    spectra_box = spectra.skewers_realisation()
     fourier_estimator_instance = fou.FourierEstimator1D(spectra_box)
     result = fourier_estimator_instance.get_flux_power_1D()
     x = np.arange(len(result))*2*np.pi/boxsize
@@ -65,11 +65,12 @@ if __name__ == "__main__":
     grid_width = [gw for sn in snap_nums]
     spectral_res = sr*u.km/u.s
 
-    xlim1d = (0.3, 40)
+    xlim1d = (0.3, 10)
     xlim3d = (0.3, 100)
     ylim_avg = (0.1, 10)
 
-    snapshot_dir_pre = '/mnt/ceph/users/landerson/' #'/mnt/cephtest/landerson/' #
+    #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
+    snapshot_dir_pre = '/mnt/cephtest/landerson/' 
     snapshot_dir = ['lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4', 'lyalphaFixedA', 'lyalphaFixedB']
     labels = ['V1', 'V2', 'V3', 'V4', 'FA', 'FB']
     colors = ['#fdcc8a', '#fc8d59', '#e34a33', '#b30000', '#08519c', '#252525']
@@ -115,10 +116,14 @@ if __name__ == "__main__":
             for kk, ss, c in zip(kmode, spec, colors):
                 axis.loglog(kk, ss/meanspec, color=c)
                 axis.set_xlim(xlim)
+        ax[1].plot(k1d[4], 0.5*(spectra1d[4] + spectra1d[5])/np.mean(np.vstack(spectra1d), axis=0), linestyle=':', color='k', label='FixPair Mean')
+        ax[3].plot(k3d[4], 0.5*(spectra3d[4] + spectra3d[5])/np.mean(np.vstack(spectra3d), axis=0), linestyle=':', color='k', label='FixPair Mean')
+
+
         for i in [1,3]:
             xlim = ax[i].get_xlim()
             ax[i].plot(xlim, [1.0, 1.0], linestyle='--', alpha=0.5, color='black')
-            ax[i].set_ylim(ylim_avg)
+            if i == 3: ax[i].set_ylim(ylim_avg)
             ax[i].set_xlim(xlim)
         ax[3].set_xlabel('k [h/Mpc]')
         ax[0].set_ylabel('1DP')
