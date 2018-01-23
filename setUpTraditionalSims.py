@@ -1,5 +1,7 @@
 import numpy as np
 
+directory = '/mnt/home/landerson/lyalpha/'
+
 for m in range(46):
     n = m + 5
     seed = np.random.randint(100000)
@@ -50,7 +52,7 @@ UnitMass_in_g = 1.989e43      # defines mass unit of output (in g/cm)
 UnitVelocity_in_cm_per_s = 1e5 # defines velocity unit of output (in cm/sec)
 """.format(n, seed)
 
-    with open('paramfileVaried{0}.genic'.format(n), 'w') as f:
+    with open(directory + 'paramfileVaried{0}.genic'.format(n), 'w') as f:
         f.write(genicParamString)
 
     #make paramfile for gadget
@@ -111,7 +113,7 @@ SnapshotWithFOF = 1
 WindModel = nowind
 """.format(n, n)
 
-    with open('paramfileVaried{0}.gadget'.format(n), 'w') as f:
+    with open(directory + 'paramfileVaried{0}.gadget'.format(n), 'w') as f:
         f.write(gadgetParamString)
 
 #make sbatch file, with n/10 sims per sbatch file
@@ -142,7 +144,7 @@ export OMP_NUM_THREADS=1
 date
 """.format(k, k)
 
-    with open('Var{0}.sbatch'.format(k), 'w') as f:
+    with open(directory + 'Var{0}.sbatch'.format(k), 'w') as f:
         f.write(sbatchStringStart)
         for i in range(5):
             num = k + 10*i
