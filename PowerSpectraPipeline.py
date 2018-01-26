@@ -59,7 +59,8 @@ def lnMeanFlux(z):
 if __name__ == "__main__":
     #python3 PowerSpectrPipeline.py 200 50 0 4 12 14
     gw = int(sys.argv[1]) #200
-    sr = int(sys.argv[2]) #50
+    sr = int(sys.argv[2])
+    snapshot_dir = sys.argv[3] #50
     snap_nums = [0, 4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
     boxsize = 20. #Mpc/h
     grid_width = [gw for sn in snap_nums]
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     ylim_avg = (0.1, 10)
 
     #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
-    snapshot_dir_pre = '/mnt/cephtest/landerson/' 
+    snapshot_dir_pre = '/mnt/cephtest/landerson/'
     snapshot_dir = ['lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4', 'lyalphaFixedA', 'lyalphaFixedB']
     labels = ['V1', 'V2', 'V3', 'V4', 'FA', 'FB']
     colors = ['#fdcc8a', '#fc8d59', '#e34a33', '#b30000', '#08519c', '#252525']
@@ -83,7 +84,7 @@ if __name__ == "__main__":
 
     #loop over redshift and the grid with associated with it
     #I currently set the grid width to be the same at each redshift, though the resolution is different at different redshifts
-    #something to improve in the future 
+    #something to improve in the future
     for sn, g in zip(snap_nums, grid_width):
         spectra1d= []
         k1d = []
@@ -94,7 +95,7 @@ if __name__ == "__main__":
         #z = []
         fig, ax = plt.subplots(4, figsize=(6, 8)) #len(snap_nums))
         for s, c, l in zip(snapshot_dir, colors, labels):
-            
+
             p1d, k1dnow, mean_flux, redshift = get1dps(snapshot_num=sn, snapshot_dir = snapshot_dir_pre + s, reload_snapshot=False, label=l, grid_width=g, spectral_res=spectral_res)
             lnow, = ax[0].loglog(k1dnow, p1d, label=l, color=c)
             ax[0].set_xlim(xlim1d)
@@ -144,4 +145,3 @@ if __name__ == "__main__":
     axmf.set_ylabel('ln mean flux')
     figmf.savefig('meanFlux_ngrid{0:03d}_specres{1:03d}.pdf'.format(gw, sr))
     print('saved meanflux plot for gridwidth {0} and spectral resolution {1}'.format(gw, sr))
-
