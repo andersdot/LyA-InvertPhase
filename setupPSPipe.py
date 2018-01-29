@@ -1,5 +1,5 @@
-#directory = '/mnt/home/landerson/lyalpha/'
-directory = './'
+directory = '/mnt/home/landerson/lyalpha/'
+#directory = './'
 for j in range(10):
     k = j + 5
     sbatchStringStart = """#!/bin/bash

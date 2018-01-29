@@ -2,10 +2,6 @@ import numpy as np
 import astropy.units as u
 import math as mh
 import sys
-import matplotlib as mpl
-mpl.use('pdf')
-import matplotlib.pyplot as plt
-#get_ipython().magic(u'matplotlib inline')
 import power_spectra as spe
 import fourier_estimators as fou
 import boxes
@@ -14,7 +10,7 @@ import subprocess
 import os.path
 
 
-def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, label=None):
+def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, label=None, boxsize=20.):
 
     if reload_snapshot == False:
         try:
@@ -57,6 +53,10 @@ def lnMeanFlux(z):
 
 
 if __name__ == "__main__":
+    import matplotlib as mpl
+    mpl.use('pdf')
+    import matplotlib.pyplot as plt
+
     #python3 PowerSpectrPipeline.py 200 50 0 4 12 14
     gw = int(sys.argv[1]) #200
     sr = int(sys.argv[2])
