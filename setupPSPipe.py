@@ -23,6 +23,6 @@ date
         f.write(sbatchStringStart)
         for i in range(5):
             num = k + 10*i
-            pspipeLine = "srun python3 makeSpectra.py lyalphaVaried{0} \n".format(num)
+            pspipeLine = "srun python3 PowerSpectraPipeline_single.py 200 10 lyalphaVaried{0} \n".format(num)
             f.write(pspipeLine)
             f.write('date \n')
