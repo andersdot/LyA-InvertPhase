@@ -63,8 +63,8 @@ InitCondFile = output/IC_varied_{0}
 OutputDir =  /mnt/cephtest/landerson/lyalphaVaried{1}
 #OutputDir = /mnt/ceph/users/landerson/lyalphaVaried1
 TreeCoolFile = /mnt/xfs1/home/landerson/src/MP-Gadget/examples/TREECOOL_fg_june11
-OutputList = 0.010101010101010102,0.02,0.1,0.192307692308,0.2,0.208333333333,0.217391304348,0.227272727273,0.238095238095,0.25,0.263157894737,0.277777777778,0.294117647059,0.3125
-
+OutputList = "0.02,0.1,0.192307692308,0.2,0.208333333333,0.217391304348,0.227272727273,0.238095238095,0.25,0.263157894737,0.277777777778,0.294117647059,0.3125,0.33333"
+#OutputListOn=1
 
 Nmesh = 512
 
@@ -148,8 +148,8 @@ date
         for i in range(5):
             num = k + 10*i
             genicLine = "srun -n 28 -c 1 --mpi=pmi2 $ROOT/MP-GenIC  paramfileVaried{0}.genic || exit 1 \n".format(num)
-            gadgetLine = "srun -n 28 -c 1 --mpi=pmi2 $ROOT/MP-Gadget paramfileVaried{0}.gadget || exit 1 \n".format(num)
-            f.write(genicLine)
+            gadgetLine = "srun -n 28 -c 1 --mpi=pmi2 $ROOT/MP-Gadget paramfileVaried{0}.gadget 2 014 || exit 1 \n".format(num)
+            #f.write(genicLine)
             f.write(gadgetLine)
             f.write(dateLine)
 
