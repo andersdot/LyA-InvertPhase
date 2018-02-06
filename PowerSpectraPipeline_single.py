@@ -40,14 +40,15 @@ def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*
 
 
 def get3dps(snapshot_directory, snapshot, snapshot_save_directory):
-    filename = snapshot_directory + '/PK-DM-PART_{0:03d}'.format(snapshot)
-    if os.path.exists(filename):
+    filename = snapshot_save_directory + '/PK-DM-snap_{0:03d}'.format(snapshot)
+    try:
         data = np.genfromtxt(filename, names= ['k', 'p'])
-    else:
-        command = '/mnt/home/landerson/src/GenPK/gen-pk -i {0}/PART_{1:03d} -o {2}'.format(snapshot_directory, snapshot, snapshot_save_directory)
+    except OSError:
+        command = '/home/landerson/src/GenPK/gen-pk -i {0}/PART_{1:03d} -o {2}'.format(snapshot_directory, snapshot, snapshot_save_directory)
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         exit_code = process.wait()
-        data = np.genfromtxt(filename, names=['k', 'p'])
+        try: data = np.genfromtxt(filename, names=['k', 'p'])
+        except OSError: return 0, 0
     return data['p'], data['k']
 
 def lnMeanFlux(z):
@@ -63,7 +64,8 @@ if __name__ == "__main__":
     grid_width = int(sys.argv[1]) #200
     spectral_res = int(sys.argv[2])*u.km/u.s
     snapshot_dir = sys.argv[3] #50
-    snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    #snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    snap_nums = [0, 1, 2]
     boxsize = 20. #Mpc/h
 
     xlim1d = (0.3, 10)
@@ -76,8 +78,8 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(3, figsize=(5, 15))
 
     #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
-    snapshot_dir_pre = '/mnt/cephtest/landerson/'
-    spectra_savedir_pre = '/mnt/ceph/users/landerson/'
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    spectra_savedir_pre = '/home/landerson/lyalpha/'
     #loop over redshift and the grid with associated with it
     #I currently set the grid width to be the same at each redshift, though the resolution is different at different redshifts
     #something to improve in the future

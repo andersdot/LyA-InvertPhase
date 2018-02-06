@@ -73,7 +73,8 @@ if __name__ == "__main__":
     #python3 PowerSpectrPipeline.py 200 50 0 4 12 14
     #gw = int(sys.argv[1]) #200
     #sr = int(sys.argv[2]) #50
-    snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    #snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    snap_nums = [0, 1, 2]
     boxsize = 20. #Mpc/h
     grid_width = 200
     spectral_res = 10*u.km/u.s
@@ -82,9 +83,13 @@ if __name__ == "__main__":
     xlim3d = (0.3, 100)
     ylim_avg = (0.1, 10)
 
-    spectra_dir_pre = '/mnt/ceph/users/landerson/lyalphaVaried'
-    snapshot_dir_pre = '/mnt/cephtest/landerson/lyalphaVaried'
-    snapshots = np.arange(1, 50.001, 1).astype(int)
+
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    spectra_savedir_pre = '/home/landerson/lyalpha/'
+
+    spectra_dir_pre = '/home/landerson/lyalpha/'
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    snapshots = np.arange(0, 49.001, 1).astype(int)
     #snapshot_dir = ['lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4', 'lyalphaFixedA', 'lyalphaFixedB']
     #labels = ['V1', 'V2', 'V3', 'V4', 'FA', 'FB']
     #colors = ['#fdcc8a', '#fc8d59', '#e34a33', '#b30000', '#08519c', '#252525']
