@@ -75,8 +75,8 @@ if __name__ == "__main__":
     #sr = int(sys.argv[2]) #50
     #snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
     snap_nums = [0, 1, 2]
-    boxsize = 20. #Mpc/h
-    grid_width = 200
+    boxsize = 40. #Mpc/h
+    grid_width = 400
     spectral_res = 10*u.km/u.s
 
     xlim1d = (0.3, 10)
@@ -84,11 +84,12 @@ if __name__ == "__main__":
     ylim_avg = (0.1, 10)
 
 
-    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
-    spectra_savedir_pre = '/home/landerson/lyalpha/'
+    #spectra_dir_pre = '/home/landerson/lyalpha/'
+    #snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
 
-    spectra_dir_pre = '/home/landerson/lyalpha/'
-    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/40Mpc_512/'
+    spectra_dir_pre = '/home/landerson/lyalpha/40Mpc_512/'
+
     simulation_numbers = np.arange(0, 49.001, 1).astype(int)
 
     #snapshot_dir = ['lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4', 'lyalphaFixedA', 'lyalphaFixedB']
@@ -111,30 +112,29 @@ if __name__ == "__main__":
 
         for sim_pre, snpz in zip(simulation_pre, savenpz_pre):
             try:
-                data = np.load('spec200_{0}_{1}.npz'.format(snpz, snapshot_number) )
+                data = np.load('spec{0}_{1}_{2}.npz'.format(grid_width, snpz, snapshot_number) )
                 spectra1d = data['p1d']
-                spectra3d = data['p3d']
                 k1d = data['k1d']
-                k3d = data['k3d']
                 lnmeanflux = data['lnmeanflux']
                 z = data['z']
                 dataSaved = True
-                print('data loaded from npz for ','spec200_{0}_{1}'.format(snpz, snapshot_number))
+                print('data loaded from npz for ','spec{0}_{1}_{2}'.format(grid_width, snpz, snapshot_number))
             except IOError:
                 dataSaved = False
-                print('loading all data for ', 'spec200_{0}_{1}'.format(snpz, snapshot_number))
+                print('loading all data for ', 'spec{0}_{1}_{2}'.format(grid_width, snpz, snapshot_number))
                 spectra1d= []
                 k1d = []
-                spectra3d = []
-                k3d = []
                 legend = []
                 lnmeanflux = []
                 z = []
 
             for simulation_number in simulation_numbers:
+                if (sim_pre == 'NCV_1_') and (simulation_number > 24): continue 
+                if (sim_pre == 'NCV_0_') and (simulation_number > 24): continue 
+
                 snapshot_directory = snapshot_dir_pre + sim_pre + str(simulation_number)
                 save_directory = spectra_dir_pre + sim_pre + str(simulation_number)
-                spectra_directory = spectra_directory + '/SPECTRA_{0:03d}'.format(snapshot_number)
+                spectra_directory = save_directory + '/SPECTRA_{0:03d}'.format(snapshot_number)
                 if not dataSaved:
                     p1d, k1dnow, mean_flux, redshift = get1dps(snapshot_num=snapshot_number, snapshot_dir = snapshot_directory, reload_snapshot=False, grid_width=grid_width,
                                                            spectral_res=spectral_res, spectra_savedir=spectra_directory)
@@ -144,27 +144,15 @@ if __name__ == "__main__":
                     z.append(redshift)
                     lnmeanflux.append(lnmf)
                 if dataSaved:
-                    k1dnow = k1d[s-1]
-                    p1d = spectra1d[s-1]
-                    lnmf = lnmeanflux[s-1]
-                    redshift = z[s-1]
+                    k1dnow = k1d[simulation_number]
+                    p1d = spectra1d[simulation_number]
+                    lnmf = lnmeanflux[simulation_number]
+                    redshift = z[simulation_number]
                 lnow, = ax[0].loglog(k1dnow, p1d, color='black', lw=0.5, alpha=0.1)
                 ax[0].set_xlim(xlim1d)
-                #legend.append(lnow)
-                if not dataSaved:
-                    p3d, k3dnow = get3dps(snapshot_directory, snapshot_number, save_directory)
-                    spectra3d.append(p3d*p_corr)
-                    k3d.append(k3dnow*k_corr)
-                if dataSaved:
-                    p3d = spectra3d[s-1]/p_corr
-                    k3dnow = k3d[s-1]/k_corr
-                ax[2].loglog(k3dnow*k_corr, p3d*p_corr, color='black', lw=0.5, alpha=0.1)
-                ax[2].set_xlim(xlim3d)
-
-                print(len(p1d), len(p3d))
                 axmf.scatter(redshift, lnmf, edgecolors='black', facecolors='none', alpha=0.5)
 
-            if not dataSaved: np.savez('spec200_{0}_{1}'.format(snpz, snapshot_number), p1d=spectra1d, p3d=spectra3d, k1d=k1d, k3d=k3d, lnmeanflux=lnmeanflux, z=z)
+            if not dataSaved: np.savez('spec{0}_{1}_{2}'.format(grid_width, snpz, snapshot_number), p1d=spectra1d, k1d=k1d, lnmeanflux=lnmeanflux, z=z)
 
 """
             for kmode, spec, axis, xlim in zip([k1d, k3d], [spectra1d, spectra3d], [ax[1], ax[3]], [xlim1d, xlim3d]):

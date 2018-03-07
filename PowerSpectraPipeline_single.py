@@ -78,8 +78,9 @@ if __name__ == "__main__":
     fig, ax = plt.subplots(3, figsize=(5, 15))
 
     #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
-    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
-    spectra_savedir_pre = '/home/landerson/lyalpha/'
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/40Mpc_512/'
+    #snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    spectra_savedir_pre = '/home/landerson/lyalpha/40Mpc_512/'
     #loop over redshift and the grid with associated with it
     #I currently set the grid width to be the same at each redshift, though the resolution is different at different redshifts
     #something to improve in the future

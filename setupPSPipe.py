@@ -2,7 +2,7 @@ import os
 
 #directory = '/mnt/home/landerson/lyalpha/'
 #directory = './'
-directory = '/home/landerson/lyalpha/'
+directory = '/home/landerson/lyalpha/40Mpc_512/'
 for j in range(50):
     try: os.mkdir(directory + str(j))
     except FileExistsError: print ('file exists')
@@ -24,7 +24,7 @@ for j in range(50):
 #SBATCH --export=ALL
 
 module load intel
-module load openmpi
+module load openmpi2_ib
 
 export OMP_NUM_THREADS=1
 date
@@ -35,9 +35,9 @@ date
         #for i in range(5):
         num = k 
         #pspipeLine = "srun python3 /mnt/ceph/users/landerson/LyA-InvertPhase/PowerSpectraPipeline_single.py 200 10 lyalphaVaried{0} || exit 1 \n".format(num)
-        pspipeLineT = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 200 10 {0} || exit 1 \n".format(num)
-        pspipeLineP1 = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 200 10 NCV_0_{0} || exit 1 \n".format(num)
-        pspipeLineP2 = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 200 10 NCV_1_{0} || exit 1 \n".format(num)
+        pspipeLineT = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 400 10 {0} || exit 1 \n".format(num)
+        pspipeLineP1 = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 400 10 NCV_0_{0} || exit 1 \n".format(num)
+        pspipeLineP2 = "srun python3 /home/landerson/src/LyA-InvertPhase/PowerSpectraPipeline_single.py 400 10 NCV_1_{0} || exit 1 \n".format(num)
 
         f.write(pspipeLineT)
         f.write(pspipeLineP1)
@@ -69,11 +69,11 @@ module load hdf5
 """
     f.write(startscript)
     for j in range(50):
-        snapshot_directory_pre = '/home/fvillaescusa/data/Lya_ncv/'
+        snapshot_directory_pre = '/home/fvillaescusa/data/Lya_ncv/40Mpc_512/'
         snapshot_dirs = ['{0}/'.format(j), 'NCV_0_{0}/'.format(j), 'NCV_1_{0}/'.format(j)]
-        snapshot_save_directory_pre = '/home/landerson/lyalpha/'
+        snapshot_save_directory_pre = '/home/landerson/lyalpha/40Mpc_512/'
         snapshots = [0, 1, 2]
         for sdir in snapshot_dirs:
             for snap in snapshots:
-                cmd = 'srun /home/landerson/src/GenPK/gen-pk -i {0}/snap_{1:03d} -o {2} \n'.format(snapshot_directory_pre+sdir, snap, snapshot_save_directory_pre+sdir)
+                cmd = 'srun /home/landerson/src/GenPK/gen-pk -i {0}snap_{1:03d} -o {2} \n'.format(snapshot_directory_pre+sdir, snap, snapshot_save_directory_pre+sdir)
                 f.write(cmd)
