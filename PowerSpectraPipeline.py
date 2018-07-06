@@ -10,42 +10,75 @@ import subprocess
 import os.path
 
 
-def get1dps(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, label=None, boxsize=20.):
-
+def fluxSkewers(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, spectra_savedir=None):
+    """ generate spectra skewers, either from file or on the fly and save if they haven't been generated before""" 
     if reload_snapshot == False:
         try:
             print('trying to load 1D ps')
             reload_snapshot=False
-            spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot)
+            spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot, spectra_savedir=spectra_savedir)
         except OSError:
-
+            print('tried to load spectra but doesnt exist, so generating new spectra')
             reload_snapshot = True
-            spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot)
+            spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot, spectra_savedir=spectra_savedir)
+            spectra.spectra_instance.save_file()
     else:
-        spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot)
+        print('generating new spectra')
+        spectra = boxes.SimulationBox(snapshot_num, snapshot_dir, grid_width, spectral_res, reload_snapshot=reload_snapshot, spectra_savedir=spectra_savedir)
+        spectra.spectra_instance.save_file()
 
+    return spectra
+
+def fluxps1d(snapshot_dir = '.', snapshot_num=14, grid_width=20, spectral_res=50*u.km/u.s, reload_snapshot=True, label=None, boxsize=20., spectra_savedir=None):
+    spectra = fluxSkewers(snapshot_dir = snapshot_dir, snapshot_num=snapshot_num, 
+                          grid_width=grid_width, spectral_res=spectral_res, 
+                          reload_snapshot=reload_snapshot, spectra_savedir=spectra_savedir)
     spectra.convert_fourier_units_to_distance = True
     tau = spectra.get_optical_depth()
     tau_scaling = 1.
     mean_flux = np.mean(np.exp(-1.*tau*tau_scaling))
-    #print('The mean flux is: ', mean_flux)
-    #spectra_box = spectra.skewers_realisation_hydrogen_overdensity()
+    print('The mean flux is: ', mean_flux)                                                                                                                                        
     spectra_box = spectra.skewers_realisation()
     fourier_estimator_instance = fou.FourierEstimator1D(spectra_box)
     result = fourier_estimator_instance.get_flux_power_1D()
     x = np.arange(len(result))*2*np.pi/boxsize
     return result, x, mean_flux, spectra._redshift
+    
+def fluxps3d(snapshot_num=14, snapshot_dir='.', grid_width_in_samps=20, spectrum_resolution=50, reload_snapshot=False, spectra_savefile_root='gridded_spectra', spectra_savedir=None, power_spectra_savefile='/power_spectra.npz'):
 
+    simulation_box_instance = box.SimulationBox(snapshot_num, snapshot_dir, grid_width_in_samps, spectrum_resolution, reload_snapshot=reload_snapshot, spectra_savefile_root=spectra_savefile_root, spectra_savedir=specra_savedir)
 
-def get3dps(snapshot_directory, snapshot):
-    filename = snapshot_directory + '/PK-DM-PART_{0:03d}'.format(snapshot)
-    if os.path.exists(filename):
+    simulation_box_instance.convert_fourier_units_to_distance = True
+    delta_flux_box = simulation_box_instance.skewers_realisation()
+    k_box = simulation_box_instance.k_box()
+    mu_box = simulation_box_instance.mu_box()
+
+    #Binning to match GenPK
+    n_k_bins = 15
+    n_mu_bins = 1
+    k_max = np.max(k_box) #0.704 / u.Mpc
+
+    k_min = np.min(k_box[k_box > 0. / u.Mpc])
+    k_bin_max = mh.exp(mh.log(k_max.value) + ((mh.log(k_max.value) - mh.log(k_min.value)) / (n_k_bins - 1))) / u.Mpc
+    k_bin_edges = np.exp(np.linspace(mh.log(k_min.value), mh.log(k_bin_max.value), n_k_bins + 1)) / u.Mpc
+
+    mu_bin_edges = np.linspace(0., 1., n_mu_bins + 1)
+
+    fourier_estimator_instance = fou.FourierEstimator3D(delta_flux_box)
+    power_binned, k_binned, mu_binned, bin_counts = fourier_estimator_instance.get_power_3D_two_coords_binned(k_box,np.absolute(mu_box),k_bin_edges,mu_bin_edges,count=True)
+    np.savez(spectra_savedir + power_spectra_savefile, power_binned, k_binned, mu_binned, bin_counts)
+    return power_binned, k_binned, mu_binned, bin_counts
+
+def matterps3d(snapshot_directory, snapshot, snapshot_save_directory):
+    filename = snapshot_save_directory + '/PK-DM-snap_{0:03d}'.format(snapshot)
+    try:
         data = np.genfromtxt(filename, names= ['k', 'p'])
-    else:
-        command = '/mnt/home/landerson/src/GenPK/gen-pk -i {0}/PART_{1:03d} -o {2}'.format(snapshot_dir_pre + s, sn, snapshot_dir_pre + s)
+    except OSError:
+        command = '/home/landerson/src/GenPK/gen-pk -i {0}/PART_{1:03d} -o {2}'.format(snapshot_directory, snapshot, snapshot_save_directory)
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
         exit_code = process.wait()
-        data = np.genfromtxt(filename, names=['k', 'p'])
+        try: data = np.genfromtxt(filename, names=['k', 'p'])
+        except OSError: return 0, 0
     return data['p'], data['k']
 
 def lnMeanFlux(z):
@@ -57,91 +90,46 @@ if __name__ == "__main__":
     mpl.use('pdf')
     import matplotlib.pyplot as plt
 
-    #python3 PowerSpectrPipeline.py 200 50 0 4 12 14
-    gw = int(sys.argv[1]) #200
-    sr = int(sys.argv[2])
+    #python3 PowerSpectrPipeline.py 200 50 lyalphaVaried1
+    grid_width = int(sys.argv[1]) #200
+    spectral_res = int(sys.argv[2])*u.km/u.s
     snapshot_dir = sys.argv[3] #50
-    snap_nums = [0, 4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    #snap_nums = [4, 7, 9, 12, 14] #[int(s) for s in sys.argv[3:]]
+    snap_nums = [0, 1, 2]
     boxsize = 20. #Mpc/h
-    grid_width = [gw for sn in snap_nums]
-    spectral_res = sr*u.km/u.s
 
     xlim1d = (0.3, 10)
     xlim3d = (0.3, 100)
     ylim_avg = (0.1, 10)
 
-    #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
-    snapshot_dir_pre = '/mnt/cephtest/landerson/'
-    snapshot_dir = ['lyalphaVaried1', 'lyalphaVaried2', 'lyalphaVaried3', 'lyalphaVaried4', 'lyalphaFixedA', 'lyalphaFixedB']
-    labels = ['V1', 'V2', 'V3', 'V4', 'FA', 'FB']
-    colors = ['#fdcc8a', '#fc8d59', '#e34a33', '#b30000', '#08519c', '#252525']
-    #snap_nums = [0, 2]
-
     p_corr = boxsize**3.
     k_corr = 2*np.pi/boxsize
 
-    figmf, axmf = plt.subplots()
+    fig, ax = plt.subplots(3, figsize=(5, 15))
 
+    #snapshot_dir_pre = '/mnt/ceph/users/landerson/'
+    snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/40Mpc_512/'
+    #snapshot_dir_pre = '/home/fvillaescusa/data/Lya_ncv/'
+    spectra_savedir_pre = '/home/landerson/lyalpha/40Mpc_512/'
     #loop over redshift and the grid with associated with it
     #I currently set the grid width to be the same at each redshift, though the resolution is different at different redshifts
     #something to improve in the future
-    for sn, g in zip(snap_nums, grid_width):
-        spectra1d= []
-        k1d = []
-        spectra3d = []
-        k3d = []
-        legend = []
-        #meanflux = []
-        #z = []
-        fig, ax = plt.subplots(4, figsize=(6, 8)) #len(snap_nums))
-        for s, c, l in zip(snapshot_dir, colors, labels):
-
-            p1d, k1dnow, mean_flux, redshift = get1dps(snapshot_num=sn, snapshot_dir = snapshot_dir_pre + s, reload_snapshot=False, label=l, grid_width=g, spectral_res=spectral_res)
-            lnow, = ax[0].loglog(k1dnow, p1d, label=l, color=c)
-            ax[0].set_xlim(xlim1d)
-            legend.append(lnow)
-            p3d, k3dnow = get3dps(snapshot_dir_pre + s, sn)
-            ax[2].loglog(k3dnow*k_corr, p3d*p_corr, color=c)
-            ax[2].set_xlim(xlim3d)
-            spectra1d.append(p1d)
-            k1d.append(k1dnow)
-
-            spectra3d.append(p3d*p_corr)
-            k3d.append(k3dnow*k_corr)
-
-            axmf.scatter(redshift, np.log(mean_flux), edgecolors=c, facecolors='none')
-
-        for kmode, spec, axis, xlim in zip([k1d, k3d], [spectra1d, spectra3d], [ax[1], ax[3]], [xlim1d, xlim3d]):
-            spec = np.vstack(spec)
-            meanspec = np.mean(spec, axis=0)
-            for kk, ss, c in zip(kmode, spec, colors):
-                axis.loglog(kk, ss/meanspec, color=c)
-                axis.set_xlim(xlim)
-        ax[1].plot(k1d[4], 0.5*(spectra1d[4] + spectra1d[5])/np.mean(np.vstack(spectra1d), axis=0), linestyle=':', color='k', label='FixPair Mean')
-        ax[3].plot(k3d[4], 0.5*(spectra3d[4] + spectra3d[5])/np.mean(np.vstack(spectra3d), axis=0), linestyle=':', color='k', label='FixPair Mean')
-
-
-        for i in [1,3]:
-            xlim = ax[i].get_xlim()
-            ax[i].plot(xlim, [1.0, 1.0], linestyle='--', alpha=0.5, color='black')
-            if i == 3: ax[i].set_ylim(ylim_avg)
-            ax[i].set_xlim(xlim)
-        ax[3].set_xlabel('k [h/Mpc]')
-        ax[0].set_ylabel('1DP')
-        ax[1].set_ylabel('1DP/<P>')
-        ax[2].set_ylabel('3DP')
-        ax[3].set_ylabel('3DP/<P>')
-        fig.legend(legend, labels,
-                   ncol=len(labels), frameon=False, mode="expand", borderaxespad=0.2, bbox_to_anchor=(0., 0.95, 0.95, 0.))#, loc=3
-        ax[0].set_title('z={0:0.2f}  spectral resolution {1}km/s\n'.format(redshift, sr), y=1.25)
-        fig.tight_layout()
-        fig.savefig('ps_{0:03d}_ngrid{1:03d}_specres{2:03d}.pdf'.format(sn, gw, sr))
-    #colors = [l.get_c() for l in legend]
-
+    for sn in snap_nums:
+        print('now doing ', sn)
+        
+        p1d, k1d, mean_flux, redshift = get1dps(snapshot_num=sn, snapshot_dir = snapshot_dir_pre + snapshot_dir, reload_snapshot=False, 
+                                                grid_width=grid_width, spectral_res=spectral_res, boxsize=boxsize, spectra_savedir=spectra_savedir_pre+snapshot_dir+'/SPECTRA_{0:03d}/'.format(sn))
+        p3d, k3d = get3dps(snapshot_dir_pre + snapshot_dir, sn, spectra_savedir_pre+snapshot_dir)
+        ax[0].loglog(k1d, p1d, label=redshift)
+        ax[1].loglog(k3d*k_corr, p3d*p_corr, label=redshift)
+        ax[2].plot(redshift, np.log(mean_flux))
     zz = np.linspace(0, 4, 100)
-    axmf.plot(zz, lnMeanFlux(zz), lw=2, color='black')
-    axmf.set_ylim(-4, 1)
-    axmf.set_xlabel('redshift')
-    axmf.set_ylabel('ln mean flux')
-    figmf.savefig('meanFlux_ngrid{0:03d}_specres{1:03d}.pdf'.format(gw, sr))
-    print('saved meanflux plot for gridwidth {0} and spectral resolution {1}'.format(gw, sr))
+    ax[2].plot(zz, lnMeanFlux(zz), lw=2, color='black')
+    ax[0].set_ylabel('LyA 1D PS')
+    ax[1].set_ylabel('Matter 3D PS')
+    ax[1].set_ylabel('k [h/Mpc]')
+    ax[2].set_ylabel('ln Mean Flux')
+    ax[2].set_xlabel('redshift')
+    plt.tight_layout()
+    plt.legend()
+    fig.savefig('PS' + snapshot_dir + '.pdf')

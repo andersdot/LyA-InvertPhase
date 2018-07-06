@@ -24,11 +24,11 @@ sim_pres = ['', 'NCV_0_', 'NCV_1_']
 alphas = [0.4, 0.6, 0.8, 1.0]
 simulation_numbers = np.arange(0, n)
 colors = mpl.cm.Blues(np.linspace(0.5, 1.0, n))
-snapshot_numbers = [1,2]
+snapshot_numbers = [0, 1,2]
 
 for sim_pre in sim_pres:
 
-    for snapshot_number in [snapshot_numbers[0]]:
+    for snapshot_number in snapshot_numbers:
         
         snapshot_num = snapshot_number
         p1 = []
@@ -62,7 +62,7 @@ for sim_pre in sim_pres:
             mu_box = simulation_box_instance.mu_box()
             
             n_k_bins = 6
-            n_mu_bins = 4
+            n_mu_bins = 1
             k_max = 20. / u.Mpc
             k_min = np.min(k_box[k_box > 0. / u.Mpc])
             k_bin_max = mh.exp(mh.log(k_max.value) + ((mh.log(k_max.value) - mh.log(k_min.value)) / (n_k_bins - 1))) / u.Mpc
@@ -70,26 +70,45 @@ for sim_pre in sim_pres:
             #k_bin_edges[-2] = k_max #HACK TO FIX BINNING OF NYQUIST FREQUENCY                                                                             
             mu_bin_edges = np.linspace(0., 1., n_mu_bins + 1)
             fourier_estimator_instance = fou.FourierEstimator3D(delta_flux_box)
-            result = fourier_estimator_instance.get_power_3D_two_coords_binned(k_box,np.absolute(mu_box),k_bin_edges,mu_bin_edges,bin_coord2=True)
+            result = fourier_estimator_instance.get_flux_power_3D_binned(k_box, n_k_bins, norm = True)
+            #result = fourier_estimator_instance.get_power_3D_two_coords_binned(k_box,np.absolute(mu_box),k_bin_edges,mu_bin_edges,bin_coord2=True)
             
             power = result[0]
             k = result[1]
-            mu = result[2]
+            #mu = result[2]
             
-            for i, (plist, klist, mulist) in enumerate(zip([p1, p2, p3, p4], [k1, k2, k3, k4], [mu1, mu2, mu3, mu4])):
-                plist.append(power[:,i])
-                klist.append(k[:,i])
-                mulist.append(mu[:,i])
-                
-            for i in range(n_mu_bins):
-                if simulation_number == 0:
-                    minmu = np.min(mu[:,i])
-                    maxmu = np.max(mu[:,i])
-                    label = 'mu{0:0.2f}-{1:0.2f}'.format(minmu, maxmu)
-                else: label = None
-                plt.plot(np.log10(k[:,i]), np.log10(power[:,i]), color=c, alpha=alphas[i], label=label)
+            if n_mu_bins == 1:
+                plists = [p1]
+                klists = [k1]
+                mulists = [mu1]
+            else:
+                plists = [p1, p2, p3, p4]
+                klists = [k1, k2, k3, k4]
+                mulists = [mu1, mu2, mu3, mu4]
 
-    np.savez('spec3d_sep_{0}_{1}_{2}'.format(grid_width, sim_pre, snapshot_number), p1=p1, p2=p2, p3=p3, p4=p4, k1=k1, k2=k2, k3=k3, k4=k4, mu1=mu1, mu2=mu2, mu3=mu3, mu4=mu4)
+            for i, (plist, klist, mulist) in enumerate(zip(plists, klists, mulists)):
+                if n_mu_bins == 1:
+                    plist.append(power)
+                    klist.append(k)
+                    #mulist.append(mu)
+                else:
+                    plist.append(power[:,i])
+                    klist.append(k[:,i])
+                    mulist.append(mu[:,i])
+                    
+            for i in range(n_mu_bins):
+                if n_mu_bins == 1:
+                    print(power, k)
+                    plt.plot(np.log10(k.value), np.log10(power), color=c, alpha=alphas[i], label=None)
+                else:
+                    if simulation_number == 0:
+                        minmu = np.min(mu[:,i])
+                        maxmu = np.max(mu[:,i])
+                        label = 'mu{0:0.2f}-{1:0.2f}'.format(minmu, maxmu)
+                    else: label = None
+                    plt.plot(np.log10(k[:,i]), np.log10(power[:,i]), color=c, alpha=alphas[i], label=label)
+
+        np.savez('spec3d{0}_{1}{2}_1mubin'.format(grid_width, sim_pre, snapshot_number), p1=p1, p2=p2, p3=p3, p4=p4, k1=k1, k2=k2, k3=k3, k4=k4, mu1=mu1, mu2=mu2, mu3=mu3, mu4=mu4)
 
     plt.legend(loc='best')
     plt.xlabel('k [h/Mpc]')
