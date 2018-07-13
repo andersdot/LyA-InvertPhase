@@ -68,7 +68,7 @@ for sim_pre in sim_pres:
 
             p1.append(power)
             k1.append(k)
-            plt.plot(np.log10(k.value), np.log10(power), color=c, alpha=alphas[i], label=None)
+            plt.plot(np.log10(k.value), np.log10(power), color=c, label=None)
             import pdb; pdb.set_trace()
         np.savez('spec3d{0}_{1}{2}_1mubin'.format(grid_width, sim_pre, snapshot_number), p1=p1, p2=p2, p3=p3, p4=p4, k1=k1, k2=k2, k3=k3, k4=k4, mu1=mu1, mu2=mu2, mu3=mu3, mu4=mu4)
 
