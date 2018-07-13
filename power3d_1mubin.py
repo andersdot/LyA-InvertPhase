@@ -79,7 +79,7 @@ for sim_pre in sim_pres:
 
             #Binning to match GenPK
             n_k_bins = 15
-            n_mu_bins = 2
+            n_mu_bins = 1
 
             k_bin_edges = get_k_bin_edges_logspace(n_k_bins, k_box)
             mu_bin_edges = get_mu_bin_edges_linspace(n_mu_bins)
