@@ -86,6 +86,7 @@ for sim_pre in sim_pres:
 
             fourier_estimator_instance = fou.FourierEstimator3D(delta_flux_box)
             print(k_bin_edges, mu_bin_edges)
+            import pdb; pdb.set_trace()
             power_binned, k_binned, mu_binned, bin_counts = fourier_estimator_instance.get_power_3D_two_coords_binned(k_box,np.absolute(mu_box),k_bin_edges,mu_bin_edges,count=True)
 
 
