@@ -95,7 +95,7 @@ for sim_pre in sim_pres:
             p1.append(power_binned)
             k1.append(k_binned)
             mu1.append(mu_binned)
-            plt.plot(np.log10(k_binned.value), np.log10(power_binned), color=c, label=None)
+            plt.plot(np.log10(k_binned), np.log10(power_binned), color=c, label=None)
             import pdb; pdb.set_trace()
         np.savez('spec3d{0}_{1}{2}_1mubin'.format(grid_width, sim_pre, snapshot_number), power=p1, k=k1, mu=mu1)
 
