@@ -70,6 +70,7 @@ for sim_pre in sim_pres:
             snapshot_directory = snapshot_dir_pre + sim_pre + str(simulation_number)
             save_directory = spectra_dir_pre + sim_pre + str(simulation_number)
             spectra_directory = save_directory + '/SPECTRA_{0:03d}'.format(snapshot_number)
+            print(spectra_directory, snapshot_directory)
             simulation_box_instance = boxes.SimulationBox(snapshot_num, snapshot_directory, grid_width, spectral_res,reload_snapshot=False, spectra_savedir=spectra_directory)
 
             simulation_box_instance.convert_fourier_units_to_distance = True
