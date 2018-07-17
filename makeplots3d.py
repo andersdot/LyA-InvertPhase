@@ -46,14 +46,14 @@ for sn, z in zip(snap_nums, zz):
 
         #PkFranciscoFile = 'Pk_m_mean_NCV_z={0}.txt'.format(z)
         #PkFranciscoNCV = ascii.read(PkFranciscoFile, names=['k', 'mean', 'var'])
-        pkeys = ['p1']
-        kkeys = ['k1']
-        mukeys = ['mu1']
+        pkeys = ['power']
+        kkeys = ['k']
+        #mukeys = ['mu']
         #['p1', 'p2', 'p3', 'p4'], ['k1', 'k2', 'k3', 'k4'], ['mu1', 'mu2', 'mu3', 'mu4'], ['C0', 'C1', 'C2', 'C3']
         colors = ['C0']
-        for pkey, kkey, mukey, c in zip(pkeys, kkeys, mukeys, colors):
+        for pkey, kkey, c in zip(pkeys, kkeys, colors):
             print(data0.keys())
-            import pdb; pdb.set_trace()
+
             #minmu = np.min(data0[mukey])
             #maxmu = np.max(data0[mukey])
             #label = '${0:0.2f}<\mu<{1:0.2f}$'.format(minmu, maxmu)
@@ -66,10 +66,17 @@ for sn, z in zip(snap_nums, zz):
             stdT = np.sqrt(np.sum((dataT[pkey] - meanT)**2., axis=0)/len(dataT[pkey]))
             axvar[0].semilogx(dataT[kkey][0], stdT**2./(stdP**2.), color=c, lw=2)
             uncert = 2./25*stdT**2./(stdP**2.)
-            axvar[0].fill_between(dataT[kkey][0], stdT**2./(stdP**2.) - uncert,  stdT**2./(stdP**2.) + uncert, color='C0', alpha=0.5)
             #import pdb; pdb.set_trace()
-            lT3 = ax3d[1].fill_between(dataT[kkey][0], (meanT + stdT)/meanT, (meanT - stdT)/meanT, color='black', alpha=alpha_fill-0.2, label='traditional')
-            lP3 = ax3d[1].fill_between(data0[kkey][0], (meanP + stdP)/meanT, (meanP - stdP)/meanT, color='red', alpha=alpha_fill-0.3, label='paired')
+            yp = stdT**2./(stdP**2.) + uncert
+            ym = stdT**2./(stdP**2.) - uncert
+            axvar[0].fill_between(dataT[kkey][0][:,0], ym[:,0],  yp[:,0], color='C0', alpha=0.5)
+            #import pdb; pdb.set_trace()
+            yp = (meanT - stdT)/meanT
+            ym = (meanT + stdT)/meanT
+            lT3 = ax3d[1].fill_between(dataT[kkey][0][:,0], ym[:,0], yp[:,0], color='black', alpha=alpha_fill-0.2, label='traditional')
+            yp = (meanP - stdP)/meanT
+            ym = (meanP + stdP)/meanT
+            lP3 = ax3d[1].fill_between(data0[kkey][0][:,0], ym[:,0], yp[:,0], color='red', alpha=alpha_fill-0.3, label='paired')
 
 
             for i, (p1d, k1d) in enumerate(zip(dataT[pkey], dataT[kkey])):
