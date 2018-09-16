@@ -58,7 +58,7 @@ def create_mean_std(bigbox, dimension, sn, fixed=False):
 
     meanT, varT = variance(powerT) #  nPaired=25., nTrad=50.):
     meanP, varP = variance(powerP) #,  nPaired=25., nTrad=50.)
-    import pdb; pdb.set_trace()
+
     return kT[0], meanT, np.std(powerT, axis=0), kP[0], meanP, np.std(powerP, axis=0)
 
 
@@ -145,7 +145,7 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
             k1, Pk1, dPk1, k2, Pk2, dPk2 = create_mean_std(bigbox, dimension, sn)
             _, _, _, kF, PkF, dPkF = create_mean_std(bigbox, dimension, sn, fixed=True)
 
-
+        print('The k values are: ', k1[0:3], k2[0:3])
         #### upper panel ####
         ax1.errorbar(k1, Pk1, yerr=dPk1, lw=2,fmt='o',ms=2, elinewidth=2, capsize=5,
                         linestyle='-',c=c)
@@ -158,57 +158,60 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
                         linestyle='-', c='k')
 
         #### bias panel ####
-        pm, = ax2.plot(k1,(Pk1-Pk2)/Pk1*100., c=c,
+        print(power, dimension, bigbox)
+        try:
+            pm, = ax2.plot(k1,(Pk1-Pk2)/Pk1*100., c=c,
                  linestyle='-',lw=2, label='z='+str(z))
-        sigma = np.sqrt(dPk1**2./nstandard + dPk2**2./npaired)
-        print(sigma[-5:])
-        if z == 3: ax2.fill_between(k1, -sigma/Pk1*100., sigma/Pk1*100., color='black', alpha=0.2, edgecolor=None, linewidth=0.0)
+            sigma = np.sqrt(dPk1**2./nstandard + dPk2**2./npaired)
+            if z == 3: ax2.fill_between(k1, -sigma/Pk1*100., sigma/Pk1*100., color='black', alpha=0.2, edgecolor=None, linewidth=0.0)
 
-        #import pdb; pdb.set_trace()
-        #pm, = ax2.plot(k1,(Pk2-Pk1)/np.sqrt(dPk1**2/nstandard + dPk2**2/npaired), c=c,
-        #         linestyle='-',lw=2, label='z='+str(z))
-        ls.append(pm)
-        hs.append('z='+str(z))
-        #ax2.fill_between([x_min,x_max], -2, 2, color='grey',alpha=0.4)
-        #ax2.plot([x_min,x_max],[0,0],linestyle='--',c='k')
+            #import pdb; pdb.set_trace()
+            #pm, = ax2.plot(k1,(Pk2-Pk1)/np.sqrt(dPk1**2/nstandard + dPk2**2/npaired), c=c,
+            #         linestyle='-',lw=2, label='z='+str(z))
+            ls.append(pm)
+            hs.append('z='+str(z))
+            #ax2.fill_between([x_min,x_max], -2, 2, color='grey',alpha=0.4)
+            #ax2.plot([x_min,x_max],[0,0],linestyle='--',c='k')
 
 
-        #### variance ratio panel ####
-        # y = A/B ---> dy = y*sqrt((dA/A)^2 + (dB/B)^2)
-        ratio = (dPk1/dPk2)**2./2.0
-        f = interp1d(k1, ratio)
-        kpaper = [np.min(k1[~np.isnan(k1) & (k1!=0.0)]), 2.]
+            #### variance ratio panel ####
+            # y = A/B ---> dy = y*sqrt((dA/A)^2 + (dB/B)^2)
+            ratio = (dPk1/dPk2)**2./2.0
+            f = interp1d(k1, ratio)
+            kpaper = [np.min(k1[~np.isnan(k1) & (k1!=0.0)]), 2.]
 
-        if bigbox: boxsize = 40
-        else: boxsize = 20
-        if z == 3: print('VarRatio at z={7} for {0} {1} {2} Mpc box at k = {3:0.2f}, {4:0.2f} is {5:0.4f}, {6:0.4f}'.format(power, dimension, boxsize, kpaper[0], kpaper[1], f(kpaper[0]), f(kpaper[1]), z))
-        #dratio = ratio*np.sqrt(1.0/standard + 1.0/paired) #old wrong formula
-        dratio = 0.5*ratio*(2.0/nstandard + 2.0/npaired) #old wrong formula
-        #uncert = 1/2.*np.sqrt(varT/varP)*np.sqrt(2./nTrad + 2./nPaired)
-        ax3.plot(k1, ratio, c=c,lw=2)
+            if bigbox: boxsize = 40
+            else: boxsize = 20
+            if z == 3: print('VarRatio at z={7} for {0} {1} {2} Mpc box at k = {3:0.2f}, {4:0.2f} is {5:0.4f}, {6:0.4f}'.format(power, dimension, boxsize, kpaper[0], kpaper[1], f(kpaper[0]), f(kpaper[1]), z))
+            #dratio = ratio*np.sqrt(1.0/standard + 1.0/paired) #old wrong formula
+            dratio = 0.5*ratio*(2.0/nstandard + 2.0/npaired) #old wrong formula
+            #uncert = 1/2.*np.sqrt(varT/varP)*np.sqrt(2./nTrad + 2./nPaired)
+            ax3.plot(k1, ratio, c=c,lw=2)
 
-        if power == 'lya':
-            ax3.plot(k1, (dPk1/dPkF)**2., c=c, lw=2, linestyle='--')
-            p5,=ax3.plot(k1, np.zeros(len(k1))+1e5, c='k', lw=2, linestyle='--')
-        p4,=ax3.plot(k1, np.zeros(len(k1))+1e5, c='k', lw=2)
-        ax3.fill_between(k1, ratio+dratio, ratio-dratio, color=c,alpha=0.5)
-        if power == 'matter':
-            k_r,r,s1,s2 = np.loadtxt(f_r,unpack=True)
-            ratio_lazy = np.zeros(len(k_r))
-            if ratio_switch:
-                for i in xrange(len(k_r)):
-                    index = np.where(k1==k_r[i])[0]
-                    ratio_lazy[i] = dPk1[index]/(0.5*(s1[i]+s2[i]))
-            else:
-                ratio_lazy = dPk1/(0.5*(s1+s2))
-            ax3.plot(k_r, ratio_lazy, c=c,lw=2, linestyle='--')
-            p5,=ax3.plot(k_r, np.zeros(len(k_r))+1e5, c='k', lw=2, linestyle='--')
-            indexes = ~np.isnan(ratio)
-            ratio_new = ratio[indexes]
-            ratio_new = ratio_new[~np.isinf(ratio_new)]
-            #print(fout,z,np.max(ratio_lazy),np.max(ratio_new))
+            if power == 'lya':
+                ax3.plot(k1, (dPk1/dPkF)**2., c=c, lw=2, linestyle='--')
+                p5,=ax3.plot(k1, np.zeros(len(k1))+1e5, c='k', lw=2, linestyle='--')
+            p4,=ax3.plot(k1, np.zeros(len(k1))+1e5, c='k', lw=2)
+            ax3.fill_between(k1, ratio+dratio, ratio-dratio, color=c,alpha=0.5)
+            if power == 'matter':
+                k_r,r,s1,s2 = np.loadtxt(f_r,unpack=True)
+                ratio_lazy = np.zeros(len(k_r))
+                if ratio_switch:
+                    for i in xrange(len(k_r)):
+                        index = np.where(k1==k_r[i])[0]
+                        ratio_lazy[i] = dPk1[index]/(0.5*(s1[i]+s2[i]))
+                else:
+                    ratio_lazy = dPk1/(0.5*(s1+s2))
+                ax3.plot(k_r, ratio_lazy, c=c,lw=2, linestyle='--')
+                p5,=ax3.plot(k_r, np.zeros(len(k_r))+1e5, c='k', lw=2, linestyle='--')
+                indexes = ~np.isnan(ratio)
+                ratio_new = ratio[indexes]
+                ratio_new = ratio_new[~np.isinf(ratio_new)]
+                #print(fout,z,np.max(ratio_lazy),np.max(ratio_new))
 
-        ax3.plot([x_min, x_max],[1.0, 1.0], c='k',linestyle=':')
+            ax3.plot([x_min, x_max],[1.0, 1.0], c='k',linestyle=':')
+        except ValueError:
+            pass
     for a in ax:
         a.xaxis.set_major_formatter( NullFormatter() )   #unset x label
         a.set_xscale('log')
@@ -219,10 +222,10 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
                ["%d standard      simulations"%nstandard,
                 "%d paired fixed simulations"%npaired],
                loc=0,prop={'size':10.5},ncol=1,frameon=False)
-    ax3.legend([p4,p5],
-               ["paired fixed",
-                "fixed"],
-               loc=0,prop={'size':10.5},ncol=2,frameon=False)
+    #ax3.legend([p4,p5],
+    #           ["paired fixed",
+    #            "fixed"],
+    #           loc=0,prop={'size':10.5},ncol=2,frameon=False)
 
     ax2.legend(ls, hs, ncol=3, bbox_to_anchor=(0.6, 1.7))
     fig.savefig(f_out, bbox_inches="tight")
@@ -406,6 +409,7 @@ y_max_4 = 150
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
           nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+
 ###########################################################################
 
 ############################### Pk Lya 1d #################################
@@ -427,7 +431,7 @@ y_lim_3 = 3
 
 y_max_4 = 80
 
-
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
           nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+
 ###########################################################################

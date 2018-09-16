@@ -82,7 +82,7 @@ for sim_pre in sim_pres:
             n_k_bins = 14
             n_mu_bins = 1
 
-            k_bin_edges = k_bin_edges = np.loadtxt('20Mpc_hydro/20Mpc_kvalues.txt')
+            k_bin_edges = np.arange(1, 444)*2*np.pi/20. #k_bin_edges = np.loadtxt('20Mpc_hydro/20Mpc_kvalues.txt')
             #get_k_bin_edges_logspace(n_k_bins, k_box)
             mu_bin_edges = get_mu_bin_edges_linspace(n_mu_bins)
 
