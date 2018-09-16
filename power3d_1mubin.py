@@ -83,7 +83,7 @@ for sim_pre in sim_pres:
             n_mu_bins = 1
 
             #k_bin_edges = get_k_bin_edges_logspace(n_k_bins, k_box)
-            k_bin_edges = np.loadtxt('40Mpc_hydro/40Mpc_kvalues.txt')
+            k_bin_edges = np.load('40Mpc_hydro/40Mpc_kvalues.txt')
             mu_bin_edges = get_mu_bin_edges_linspace(n_mu_bins)
 
             fourier_estimator_instance = fou.FourierEstimator3D(delta_flux_box)
