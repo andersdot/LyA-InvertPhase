@@ -58,7 +58,7 @@ def create_mean_std(bigbox, dimension, sn, fixed=False):
 
     meanT, varT = variance(powerT) #  nPaired=25., nTrad=50.):
     meanP, varP = variance(powerP) #,  nPaired=25., nTrad=50.)
-
+    import pdb; pdb.set_trace()
     return kT[0], meanT, np.std(powerT, axis=0), kP[0], meanP, np.std(powerP, axis=0)
 
 
