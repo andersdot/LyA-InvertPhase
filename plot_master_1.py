@@ -155,8 +155,9 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
             _, _, _, kF, PkF, dPkF = create_mean_std(bigbox, dimension, sn, fixed=True,
             oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 
-        print('The k values are: ', k1[0:3], k2[0:3])
+        #print('The k values are: ', k1[0:3], k2[0:3])
         #### upper panel ####
+        print(c, colors)
         ax1.errorbar(k1, Pk1, yerr=dPk1, lw=2,fmt='o',ms=2, elinewidth=2, capsize=5,
                         linestyle='-',c=c)
         ax1.plot(k2, Pk2, lw=2,
@@ -279,13 +280,15 @@ make_plots_lya(zz, colors, True, '1d')
 make_plots_lya(zz, colors, False, '3d')
 make_plots_lya(zz, colors, False, '1d')
 """
-"""
+
 ###########################################################################
 ################################ 20 Mpc - hydro ##########################
 ###########################################################################
 nstandard, npaired = 50, 50
 root = '20Mpc_hydro'
 ratio_switch = False
+oldFakeSpec=True
+meanFlux=True
 
 
 ############################### Pk matter #################################
@@ -310,7 +313,8 @@ y_lim_3 = 5
 y_max_4 = 200
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, 
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 ###########################################################################
 
 ############################### Pk Lya 3d #################################
@@ -334,7 +338,8 @@ y_max_4 = 80
 
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, 
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 ###########################################################################
 
 ############################### Pk Lya 1d #################################
@@ -358,9 +363,10 @@ y_max_4 = 30
 
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, 
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 ###########################################################################
-"""
+
 
 ###########################################################################
 ################################ 40 Mpc - hydro ##########################
@@ -368,11 +374,9 @@ make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
 nstandard, npaired = 50, 25
 root = '40Mpc_hydro'
 ratio_switch = False
-oldFakeSpec=True
-meanFlux=False
 
 ############################### Pk matter #################################
-f_out = '../LyA-paper/Pk_m_40Mpc_hydro' #'%s/Pk_mm_20Mpc_hydro'%root
+f_out = '../LyA-paper/Pk_m_40Mpc_hydro_meanflux' #'%s/Pk_mm_20Mpc_hydro'%root
 #f1    = '%s/mean/Pk_m_mean'%root
 #f2    = '%s/mean/Pk_m_mean_NCV'%root
 
@@ -396,7 +400,7 @@ y_max_4 = 400
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
           nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
-          y_lim_3, y_max_4, ratio_switch)
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 ###########################################################################
 
 ############################### Pk Lya 3d #################################
@@ -425,7 +429,7 @@ make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
 
 ###########################################################################
 
-"""
+
 ############################### Pk Lya 1d #################################
 f_out = '../LyA-paper/Pk_lya1d_40Mpc_hydro' #'%s/Pk_mm_20Mpc_hydro'%root
 f1    = None
@@ -450,66 +454,5 @@ make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
           y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 
 ###########################################################################
-"""
-###########################################################################
-################################ 40 Mpc - hydro ##########################
-###########################################################################
-nstandard, npaired = 50, 25
-root = '40Mpc_hydro'
-ratio_switch = False
-oldFakeSpec=True
-meanFlux=True
-
-###########################################################################
-
-############################### Pk Lya 3d #################################
-f_out = '../LyA-paper/Pk_lya3d_40Mpc_hydro_meanflux' #'%s/Pk_mm_20Mpc_hydro'%root
-f1    = None
-f2    = None
-f_r   = None
-
-dimension = '3d'
-bigbox = True
-power = 'lya'
-y_min_1 = 2e-4
-y_max_1 = 100
 
 
-#y_lim_2 = 10
-
-y_lim_3 = 3
-
-y_max_4 = 14.5
-
-
-make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
-          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
-
-###########################################################################
-"""
-############################### Pk Lya 1d #################################
-f_out = '../LyA-paper/Pk_lya1d_40Mpc_hydro_meanflux' #'%s/Pk_mm_20Mpc_hydro'%root
-f1    = None
-f2    = None
-f_r   = None
-
-dimension = '1d'
-bigbox = True
-power = 'lya'
-
-y_min_1 = 5e-4
-y_max_1 = 1
-
-#y_lim_2 = 2
-
-y_lim_3 = 3
-
-y_max_4 = 80
-
-make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
-          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
-
-###########################################################################
-"""
