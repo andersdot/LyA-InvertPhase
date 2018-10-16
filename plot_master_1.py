@@ -17,19 +17,28 @@ import matplotlib.patches as mpatches
 from astropy.io import ascii
 from scipy.interpolate import interp1d
 
-def create_mean_std(bigbox, dimension, sn, fixed=False):
+def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, meanFlux=False):
     if bigbox:
         grid_width = 400
         boxsize = 40 #Mpc/h
-        filenamePostfix = '_1mubin.npz'
+        filenamePostfix = '.npz'
     else:
         grid_width = 200
         boxsize = 20
-        filenamePostfix = '_1mubin_20Mpc.npz'
+        filenamePostfix = '_20Mpc.npz'
 
-    dataT = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_{2}'.format(dimension, grid_width, sn) + filenamePostfix)
-    data0 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_0_{2}'.format(dimension, grid_width, sn) + filenamePostfix)
-    data1 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_1_{2}'.format(dimension, grid_width, sn) + filenamePostfix)
+
+    if oldFakeSpec:
+        oldFakeAdd = '_oldfakespec'
+    else:
+        oldFakeAdd = ''
+    if meanFlux:
+        meanFAdd = '_settotradmean'
+    else:
+        meanFAdd = ''
+    dataT = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
+    data0 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_0_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
+    data1 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_1_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
 
 
     if dimension == '1d':
@@ -64,7 +73,7 @@ def create_mean_std(bigbox, dimension, sn, fixed=False):
 
 def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
               nstandard,  npaired, x_min, x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch,
-              avoid_z=False):
+              avoid_z=False, oldFakeSpec=True, meanFlux=False):
     plt.clf()
     fig=figure(figsize=(9/1.4,15/1.4))
 
@@ -106,7 +115,7 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
 
     ax2.set_ylim(-y_lim_2, y_lim_2)
     ax3.set_ylim(0.5, y_max_4)
-    ax3.set_yscale('log')
+    #ax3.set_yscale('log')
 
     if power == 'matter':
         ax1.set_ylabel('$\mathrm{3D \; P_M(k) \;[h/Mpc]^3}$', fontsize=12)
@@ -118,7 +127,7 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
 
     ax2.set_ylabel(r'$\mathrm{\Delta \overline{P}/\overline{P}_S\; [\%]}$')
 
-    ax3.set_yscale('log')
+    #ax3.set_yscale('log')
     ax1.set_yscale('log')
     ax1.set_ylim(y_min_1, y_max_1)
 
@@ -142,8 +151,9 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
             k1,Pk1,dPk1 = np.loadtxt(f1,unpack=True)
             k2,Pk2,dPk2 = np.loadtxt(f2,unpack=True)
         if power == 'lya':
-            k1, Pk1, dPk1, k2, Pk2, dPk2 = create_mean_std(bigbox, dimension, sn)
-            _, _, _, kF, PkF, dPkF = create_mean_std(bigbox, dimension, sn, fixed=True)
+            k1, Pk1, dPk1, k2, Pk2, dPk2 = create_mean_std(bigbox, dimension, sn, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
+            _, _, _, kF, PkF, dPkF = create_mean_std(bigbox, dimension, sn, fixed=True,
+            oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 
         print('The k values are: ', k1[0:3], k2[0:3])
         #### upper panel ####
@@ -269,7 +279,7 @@ make_plots_lya(zz, colors, True, '1d')
 make_plots_lya(zz, colors, False, '3d')
 make_plots_lya(zz, colors, False, '1d')
 """
-
+"""
 ###########################################################################
 ################################ 20 Mpc - hydro ##########################
 ###########################################################################
@@ -350,7 +360,7 @@ y_max_4 = 30
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
           nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
 ###########################################################################
-
+"""
 
 ###########################################################################
 ################################ 40 Mpc - hydro ##########################
@@ -358,7 +368,8 @@ make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
 nstandard, npaired = 50, 25
 root = '40Mpc_hydro'
 ratio_switch = False
-
+oldFakeSpec=True
+meanFlux=False
 
 ############################### Pk matter #################################
 f_out = '../LyA-paper/Pk_m_40Mpc_hydro' #'%s/Pk_mm_20Mpc_hydro'%root
@@ -384,7 +395,8 @@ y_max_4 = 400
 
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
+          y_lim_3, y_max_4, ratio_switch)
 ###########################################################################
 
 ############################### Pk Lya 3d #################################
@@ -404,14 +416,16 @@ y_max_1 = 100
 
 y_lim_3 = 3
 
-y_max_4 = 150
+y_max_4 = 14.5
 
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 
 ###########################################################################
 
+"""
 ############################### Pk Lya 1d #################################
 f_out = '../LyA-paper/Pk_lya1d_40Mpc_hydro' #'%s/Pk_mm_20Mpc_hydro'%root
 f1    = None
@@ -432,6 +446,70 @@ y_lim_3 = 3
 y_max_4 = 80
 
 make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
-          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2, y_lim_3, y_max_4, ratio_switch)
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
 
 ###########################################################################
+"""
+###########################################################################
+################################ 40 Mpc - hydro ##########################
+###########################################################################
+nstandard, npaired = 50, 25
+root = '40Mpc_hydro'
+ratio_switch = False
+oldFakeSpec=True
+meanFlux=True
+
+###########################################################################
+
+############################### Pk Lya 3d #################################
+f_out = '../LyA-paper/Pk_lya3d_40Mpc_hydro_meanflux' #'%s/Pk_mm_20Mpc_hydro'%root
+f1    = None
+f2    = None
+f_r   = None
+
+dimension = '3d'
+bigbox = True
+power = 'lya'
+y_min_1 = 2e-4
+y_max_1 = 100
+
+
+#y_lim_2 = 10
+
+y_lim_3 = 3
+
+y_max_4 = 14.5
+
+
+make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
+
+###########################################################################
+"""
+############################### Pk Lya 1d #################################
+f_out = '../LyA-paper/Pk_lya1d_40Mpc_hydro_meanflux' #'%s/Pk_mm_20Mpc_hydro'%root
+f1    = None
+f2    = None
+f_r   = None
+
+dimension = '1d'
+bigbox = True
+power = 'lya'
+
+y_min_1 = 5e-4
+y_max_1 = 1
+
+#y_lim_2 = 2
+
+y_lim_3 = 3
+
+y_max_4 = 80
+
+make_plot(power, zs, colors, snaps, f_out, f1, f2, f_r, bigbox, dimension,
+          nstandard,  npaired, x_min,  x_max, y_min_1, y_max_1, y_lim_2,
+          y_lim_3, y_max_4, ratio_switch, oldFakeSpec=oldFakeSpec, meanFlux=meanFlux)
+
+###########################################################################
+"""
