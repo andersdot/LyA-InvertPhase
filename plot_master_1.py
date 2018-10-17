@@ -25,7 +25,7 @@ def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, mean
     else:
         grid_width = 200
         boxsize = 20
-        filenamePostfix = '_20Mpc.npz'
+        filenamePostfix = '.npz'
 
 
     if oldFakeSpec:
@@ -36,9 +36,9 @@ def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, mean
         meanFAdd = '_settotradmean'
     else:
         meanFAdd = ''
-    dataT = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
-    data0 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_0_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
-    data1 = np.load('/Users/landerson/LyA-InvertPhase/goodspec{0}/spec{0}{1}_NCV_1_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
+    dataT = np.load('goodspec{0}/spec{0}{1}_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
+    data0 = np.load('goodspec{0}/spec{0}{1}_NCV_0_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
+    data1 = np.load('goodspec{0}/spec{0}{1}_NCV_1_{2}_1mubin{3}{4}'.format(dimension, grid_width, sn, oldFakeAdd, meanFAdd) + filenamePostfix)
 
 
     if dimension == '1d':
@@ -51,7 +51,8 @@ def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, mean
 
     nTrad = shapeT[0]
     if dimension == '1d':
-        kT = np.arange(shapeT[1])[np.newaxis, :]*2*np.pi/boxsize
+        kT = np.arange(shapeT[1]+1)*2*np.pi/boxsize
+        kT = 0.5*(kT[1:] + kT[:-1])
     else:
         kT = dataT['k'].reshape(shapeT[0:2])
     shapeP = data0['power'].shape
@@ -59,7 +60,8 @@ def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, mean
     if fixed: powerP = data1['power'].reshape(shapeP[0:2])*normalization
     if dimension == '1d':
         #import pdb; pdb.set_trace()
-        kP = np.arange(shapeP[1])[np.newaxis, :]*2*np.pi/boxsize
+        kP = np.arange(shapeP[1]+1)*2*np.pi/boxsize
+        kP = 0.5*(kP[1:] + kP[:-1])
     else:
         kP = data0['k'].reshape(shapeP[0:2])
     #nPaired = shapeP[0]
@@ -68,7 +70,23 @@ def create_mean_std(bigbox, dimension, sn, fixed=False, oldFakeSpec = True, mean
     meanT, varT = variance(powerT) #  nPaired=25., nTrad=50.):
     meanP, varP = variance(powerP) #,  nPaired=25., nTrad=50.)
 
-    return kT[0], meanT, np.std(powerT, axis=0), kP[0], meanP, np.std(powerP, axis=0)
+    stdT = np.std(powerT, axis=0)
+    stdP = np.std(powerP, axis=0)
+
+    if dimension == '1d':
+
+        meanT = meanT[1:]
+        kT = kT[1:]
+        meanP = meanP[1:]
+        kP = kP[1:]
+        stdT = stdT[1:]
+        stdP = stdP[1:]
+    if dimension == '3d':
+        kT = kT[0]
+        kP = kP[0]
+
+    print(kT.shape, meanT.shape, stdT.shape, kP.shape, meanP.shape, stdP.shape)
+    return kT, meanT, stdT, kP, meanP, stdP
 
 
 def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
@@ -115,7 +133,7 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
 
     ax2.set_ylim(-y_lim_2, y_lim_2)
     ax3.set_ylim(0.5, y_max_4)
-    #ax3.set_yscale('log')
+    ax3.set_yscale('log')
 
     if power == 'matter':
         ax1.set_ylabel('$\mathrm{3D \; P_M(k) \;[h/Mpc]^3}$', fontsize=12)
@@ -157,7 +175,8 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
 
         #print('The k values are: ', k1[0:3], k2[0:3])
         #### upper panel ####
-        print(c, colors)
+        print(k1.shape, Pk1.shape, dPk1.shape)
+        
         ax1.errorbar(k1, Pk1, yerr=dPk1, lw=2,fmt='o',ms=2, elinewidth=2, capsize=5,
                         linestyle='-',c=c)
         ax1.plot(k2, Pk2, lw=2,
@@ -189,7 +208,11 @@ def make_plot(power, zz, colors, snaps, fout,f_1,f_2,fr, bigbox, dimension,
             # y = A/B ---> dy = y*sqrt((dA/A)^2 + (dB/B)^2)
             ratio = (dPk1/dPk2)**2./2.0
             f = interp1d(k1, ratio)
-            kpaper = [np.min(k1[~np.isnan(k1) & (k1!=0.0)]), 2.]
+            if bigbox:
+                kpaper = [0.25, 2.0]
+            else:
+                kpaper = [0.5, 2.0]
+                #kpaper = [np.min(k1[~np.isnan(k1) & (k1!=0.0)]), 2.]
 
             if bigbox: boxsize = 40
             else: boxsize = 20
